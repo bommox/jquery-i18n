@@ -1,5 +1,4 @@
 {
     "settings" : "Ajustes",
-    "welcome" : "¡Bienvenido al test de i18n!",
     "param_str" : "¡Hola ${name}! ayer te vi a las ${time}"
 }

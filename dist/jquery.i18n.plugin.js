@@ -14,6 +14,7 @@
         _loadedLocales : {},
         locales : null,
         dictionary : {},
+        _ready : false,
         
         init : function(/*array*/ locales, /*Object literal*/ settings) {
             if ($.isArray(locales) && locales.length > 0) {
@@ -30,6 +31,7 @@
                 if (!this.settings.lazyLoad) {
                     this.loadLocale(this.locales);
                 }
+                this._ready = true;
             } else {
                 console.log("jQuery.i18n error - Init(locales) must be an array.");
             }
@@ -74,22 +76,27 @@
                 
                 result = this.dictionary[locale][nlsKey];
                 
-                if (!result) {
-                    result = this.getText(nlsKey, 'root');
-                }
+                if (!result && locale != "root") {
+                    result = this.getText(nlsKey, params, 'root');
+                } else {
                 
-                if (params) {
-                    $.each(params, function(key) {
-                       result = result.replace("${" + key + "}", params[key]); 
-                    });
+                    if (params) {
+                        $.each(params, function(key) {
+                           result = result.replace("${" + key + "}", params[key]); 
+                        });
+                    }
+                    
                 }
                 
             } else {
                 console.log("jquery error - Locale " + locale + " not available.");
+                if (!this._loadedLocales['root']) {
+                    this.loadLocale('root');
+                }
                 if (this._loadedLocales["root"]) {
-                    result = this.getText(nlsKey, 'root');
+                    result = this.getText(nlsKey, params, 'root');
                 } else {
-                    console.log("jquery error - please load a root locale.");
+                    console.log("jquery i8n error - please load a root locale.");
                 }
             }
             return result || nlsKey;
@@ -104,7 +111,11 @@
     };
     
     $.fn.i18nText = function(/*String*/ nlsKey, /*String (optional)*/ locale) {
-        $(this).text(i18n.getText(nlsKey, locale));
+        if (i18n._ready) {
+            $(this).text(i18n.getText(nlsKey, locale));
+        } else {
+            console.log("jquery i18n error - please init plugin first.");
+        }
     }
     
     $.i18n = i18n;
