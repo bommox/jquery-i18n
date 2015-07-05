@@ -1,0 +1,21 @@
+{
+  "name": "jquery-i18n-plugin",
+  "version": "0.0.0",
+  "homepage": "https://github.com/bommox/jquery-i18n-plugin",
+  "authors": [
+    "bommox <bommox@gmail.com>"
+  ],
+  "description": "jQuery plugin for i18n",
+  "keywords": [
+    "jquery",
+    "i18n"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
