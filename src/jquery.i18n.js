@@ -124,4 +124,4 @@
      
      $.i18n = I18n;
           
- })(jQuery, true);
+ })(jQuery, false);
