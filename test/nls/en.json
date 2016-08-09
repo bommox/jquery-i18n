@@ -1,5 +1,4 @@
 {
-    "settings" : "Settings",
-    "welcome" : "Welcome to the i18n plugin test",
-    "param_str" : "Hi ${name}! I saw you yesterday at ${time}"
+    "welcome" :     "EN_Welcome to the i18n plugin test",
+    "param_str" :   "EN_Hi ${name}! I saw you yesterday at ${time}"
 }

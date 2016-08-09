@@ -1,4 +1,4 @@
 {
-    "settings" : "Ajustes",
-    "param_str" : "¡Hola ${name}! ayer te vi a las ${time}"
+    "settings" : "ES_Ajustes",
+    "param_str" : "ES_¡Hola ${name}! ayer te vi a las ${time}"
 }
