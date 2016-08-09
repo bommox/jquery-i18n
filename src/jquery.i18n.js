@@ -69,7 +69,7 @@
                         .done(function() {
                             var result = _this.getText(nlsKey, params);
                             log("getTextPromise [OK] -> " + result);
-                            resultDf.resolve();
+                            resultDf.resolve(result);
                         });
                     return resultDf;
                 },
@@ -109,6 +109,7 @@
                 log("[data-i18n] -> " + $that.data("i18n"));
                 I18n.getTextPromise($that.data("i18n"))
                 .done(function(text) {
+                    log("$.fn.i18n [OK]  -> " + $that.data("i18n") + " " + text);  
                     $that.html(text);
                 })
                 .fail(function() {
