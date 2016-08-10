@@ -1,35 +1,46 @@
 # jQuery i18n Plugin
 
-jQuery i18n plugin allows you to client-side translation to multiple languages. Features are:
+jQuery i18n plugin allows you to client-side translation to multiple languages.
 
-  - Programatic translation with jQuery selector
-  - Parameters replacement (using ${param_key} format)
-  - Declarative translation using the data-i18n attribute
+  - Declarative translation using the `data-i18n` attribute
+  - Translations stored via `.json` files
+  - `$.fn.i18n` applied to jQuery selectors
+  - Asyncronous translations
+  - Param/text interpolation via `${key}`or array positions `${0}`  
 
 ### Usage
 
-```js
-//Init the plugin
-$.i18n.init(["en","es"]); //First locale is the current-one
-
-//Parse all nodes with data-i18n within the selector:
-$("#container").i18nParse();
-
-//Set text of an element:
-$(".some-node").i18nText("welcome", {name: "George"});
-
-
+root.json
+```json
+{
+  welcome: "Welcome to my website",
+  greeting: "Hi ${name}!",
+  order: "Take your ${0} to the ${1}"
+}
 ```
 
-### New features soon
-
-* Params in declarative mode
-* SetLocale updates everything
-
-License
-----
-
-MIT
+es.json
+```json
+{
+  welcome: "Bienvenido a mi sitio web",
+  greeting: "¡Hola ${name}!"
+}
+```
 
 
-**Improvements and suggestions are welcome**
+```html
+<body>
+  <p data-i18n="welcome"></p>
+  <p data-i18n="greeting" data-i18n-params='{"name":"Jorge"}'>
+  <p data-i18n="order" data-i18n-params='["brother", "party"]'>
+</body>
+```
+
+```js
+$("body").i18n();     //Translates to current locale (default root)
+$("body").i18n("es"); //Translates to 'es' locale
+
+$.i18n.setLocale("en");
+var greetingText = $.i18n.getText("greeting", {name: "Peter"});
+
+```

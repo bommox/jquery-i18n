@@ -1,5 +1,6 @@
 {
     "settings" : "ROOT_Settings",
     "welcome" : "ROOT_Welcome to the i18n plugin test",
-    "param_str" : "ROOT_Hi ${name}! I saw you yesterday at ${time}"
+    "param_str" : "ROOT_Hi ${name}! I saw you yesterday at ${time}",
+    "array_sty": "ROOT_This is string with indexed positions: ${0} is the 0 and the 1 and 2 are: '${1}', '${2}' "
 }

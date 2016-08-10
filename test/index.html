@@ -17,8 +17,9 @@
         </div>
         
         <div id="other-container">
-            <p class="test">This is other text</p>
+            <p id="test" data-i18n="param_str" data-i18n-params="{'name':'Jorge', 'time':'12h'}">This is other text</p>
             <p data-i18n="welcome">@This is another nls.</p>
+            <p data-i18n="array_sty" data-i18n-params='["Hello world","jQuery"]'></p>
         </div>
 
         <button data-locale="es">Spanish</button>
@@ -28,7 +29,7 @@
         <script type="text/javascript" src="../src/jquery.i18n.js"></script>
         <script>
             $(function() {
-               // $("body").i18n();
+                $("body").i18n("es");
                 $("button[data-locale]").click(function() {
                     $("body").i18n($(this).data("locale"));
                 });

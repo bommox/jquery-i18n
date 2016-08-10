@@ -1,6 +1,6 @@
 /*!
  * jQuery i18n plugin
- * @requires jQuery v1.3 or later
+ * @requires jQuery v2 or later
  *
  * Licensed under the MIT license.
  * See https://github.com/bommox/jquery-i18n-plugin
@@ -61,7 +61,8 @@
                         result = localeMap[currentLocale][nlsKey];                
                         if (result !== undefined && ($.isPlainObject(params) || $.isArray(params))) {
                             $.each(params, function(key, value) {
-                                result = result.replace("${" + key + "}", result); 
+                                log("  - param " + key + " : " + value);
+                                result = result.replace("${" + key + "}", value); 
                             });
                         }
                         log("getText " + nlsKey + " -> " + result + " [OK]");
@@ -79,6 +80,8 @@
                     } else {
                         log("getText " + nlsKey + " -> " + result + " [FAIL]");                        
                     }
+                    // Clean ${} marks
+                    result = result.replace(/\${.+}/ig,"");
                     return result;
                 },
                 getTextPromise : function(/*String*/ nlsKey, /*Object literal(Optional)*/ params) {
@@ -128,9 +131,20 @@
         var $this = $(this);
         I18n.setLocale(locale).done(function() {
             $this.find("[data-i18n]").each(function() {
-                var $that = $(this);
-                log("[data-i18n] -> " + $that.data("i18n"));
-                I18n.getTextPromise($that.data("i18n"))
+                var $that = $(this),
+                    params = $that.data("i18n-params");
+                log("[data-i18n] -> " + $that.data("i18n") + ", params: " + params);
+                if (params !== undefined && typeof params == "string") {
+                    try {
+                        params = JSON.parse(params);
+                    } catch (e) {
+                        try {
+                            params = JSON.parse(params.replace(/'/ig,'"'));
+                        } catch (e) {
+                        }
+                    }
+                }
+                I18n.getTextPromise($that.data("i18n"), params)
                 .done(function(text) {
                     log("$.fn.i18n [OK]  -> " + $that.data("i18n") + " " + text);  
                     $that.html(text);
@@ -139,12 +153,13 @@
                     log("$.fn.i18n ha fallado. 2");  
                 });              
             });
-         })
-         .fail(function() {
+        })
+        .fail(function() {
             log("$.fn.i18n ha fallado. 1");  
-         });
+        });
+        return $this;    
      };
      
      $.i18n = I18n;
           
- })(jQuery, false);
+ })(jQuery, true);
