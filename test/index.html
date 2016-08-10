@@ -20,10 +20,19 @@
             <p class="test">This is other text</p>
             <p data-i18n="welcome">@This is another nls.</p>
         </div>
+
+        <button data-locale="es">Spanish</button>
+        <button data-locale="en">English</button>
         
         <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.js"></script>
         <script type="text/javascript" src="../src/jquery.i18n.js"></script>
         <script>
+            $(function() {
+               // $("body").i18n();
+                $("button[data-locale]").click(function() {
+                    $("body").i18n($(this).data("locale"));
+                });
+            });
         </script>
     </body>
     </html>

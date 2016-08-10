@@ -20,14 +20,26 @@
             var currentLocale = ROOT;
             
             
-            function loadLocale(locale) {
+            function loadLocale(locale, async) {
+                async = (async===undefined) ? true : async;
                 var df = $.Deferred();
                 locale = locale || currentLocale;
                 log("loadLocale  " + locale);
                 if (localeMap[locale] === undefined) {
-                    $.ajax(localePath + locale + ".json", {
-                        dataType : 'json'
-                    }).done(function(data) {
+                    var settings = {
+                        dataType : 'json',
+                        async : async
+                    };
+                    if (async === false) {
+                        log("Load locale sync...");
+                        settings.success = function() {
+                            log("Success [OK]");
+                            df.resolve();
+                        }
+                        settings.error = df.reject;
+                    }
+                    $.ajax(localePath + locale + ".json", settings)
+                    .done(function(data) {
                         log("loadLocale " + locale + " [OK]");
                         localeMap[locale] = data;
                         df.resolve();
@@ -53,6 +65,17 @@
                             });
                         }
                         log("getText " + nlsKey + " -> " + result + " [OK]");
+                    } else if (localeMap[currentLocale] === undefined) {
+                        log("getText loading locale sync...");
+                        var _this = this;
+                        loadLocale(currentLocale, false)
+                        .done(function() {
+                            result = _this.getText(nlsKey, params);
+                            log("getText sync [OK]");
+                        })
+                        .fail(function() {
+                            log("getText sync [FAIL]");
+                        });
                     } else {
                         log("getText " + nlsKey + " -> " + result + " [FAIL]");                        
                     }
