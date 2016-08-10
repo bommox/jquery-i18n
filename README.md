@@ -13,17 +13,17 @@ jQuery i18n plugin allows you to client-side translation to multiple languages.
 root.json
 ```json
 {
-  welcome: "Welcome to my website",
-  greeting: "Hi ${name}!",
-  order: "Take your ${0} to the ${1}"
+  "welcome": "Welcome to my website",
+  "greeting": "Hi ${name}!",
+  "order": "Take your ${0} to the ${1}"
 }
 ```
 
 es.json
 ```json
 {
-  welcome: "Bienvenido a mi sitio web",
-  greeting: "¡Hola ${name}!"
+  "welcome": "Bienvenido a mi sitio web",
+  "greeting": "¡Hola ${name}!"
 }
 ```
 
