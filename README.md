@@ -31,7 +31,7 @@ es.json
 ```html
 <body>
   <p data-i18n="welcome"></p>
-  <p data-i18n="greeting" data-i18n-params='{"name":"Jorge"}'>
+  <p data-i18n="greeting" data-i18n-params="{'name':'Jorge'}">
   <p data-i18n="order" data-i18n-params='["brother", "party"]'>
 </body>
 ```
