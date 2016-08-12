@@ -1,123 +1,165 @@
 /*!
  * jQuery i18n plugin
- * @requires jQuery v1.3 or later
+ * @requires jQuery v2 or later
  *
  * Licensed under the MIT license.
  * See https://github.com/bommox/jquery-i18n-plugin
- *
- * Version: <%= pkg.version %> (<%= meta.date %>)
  */
- (function($) {
-     
-    var i18n = {
-        settings : {},
-        _loadedLocales : {},
-        locales : null,
-        dictionary : {},
-        _ready : false,
-        
-        init : function(/*array*/ locales, /*Object literal*/ settings) {
-            if ($.isArray(locales) && locales.length > 0) {
-                this.locales = locales;
-                this.locales.push("root");
-                
-                var defaultSettings = {
-                    nlsPath : "nls/",
-                    lazyLoad : false,
-                    selectedLocale : locales[0]
-                };
-                
-                this.settings = $.extend(defaultSettings, settings);
-                if (!this.settings.lazyLoad) {
-                    this.loadLocale(this.locales);
-                }
-                this._ready = true;
-            } else {
-                console.log("jQuery.i18n error - Init(locales) must be an array.");
-            }
+ (function($, doDebug) {
+     doDebug = doDebug || false;
+     var log = function(msg) {
+         if (doDebug) {
+             console.log("i18n -> " + msg);
+         }
+     }
+     var I18n = (function() {
+         
+            var ROOT = "root";
+            var localePath = "nls/";
+            var localeMap = {};
+            var currentLocale = ROOT;
             
-        },
-        
-        loadLocale : function(/*String|Array*/ locale) {
-            if ($.isArray(locale)) {
-                $.each(locale, function(pos, value) {
-                   i18n.loadLocale(value); 
-                });
-            } else if (!this._loadedLocales[locale]){
-                $.ajax(this.settings.nlsPath + locale + ".json", {
-                    async : false,
-                    dataType : 'json'
-                }).success(function(data) {
-                    i18n.dictionary[locale] = data;
-                    i18n._loadedLocales[locale] = true;
-                }).error(function() {
-                    console.log("jquery i18n An error ocurred while loading locale: " + locale);
-                });
-            }
             
-        },
-        
-        
-        setLocale : function(/*String*/ locale) {
-            if ($.inArray(locale, this.locales) > -1) {
-                this.settings.selectedLocale = locale;
-            } else {
-                console.log("jquery error - Locale " + locale + " not available.");
-            }
-        },
-        
-        getText : function(/*String*/ nlsKey, /*Object literal(Optional)*/ params, /*locale (Optional)*/ locale) {
-            locale = locale || this.settings.selectedLocale;
-            var result = undefined;
-            if ($.inArray(locale, this.locales) > -1) {
-                if (!this._loadedLocales[locale]) {
-                    this.loadLocale(locale);
-                }
-                
-                result = this.dictionary[locale][nlsKey];
-                
-                if (!result && locale != "root") {
-                    result = this.getText(nlsKey, params, 'root');
+            function loadLocale(locale, async) {
+                async = (async===undefined) ? true : async;
+                var df = $.Deferred();
+                locale = locale || currentLocale;
+                log("loadLocale  " + locale);
+                if (localeMap[locale] === undefined) {
+                    var settings = {
+                        dataType : 'json',
+                        async : async
+                    };
+                    if (async === false) {
+                        log("Load locale sync...");
+                        settings.success = function() {
+                            log("Success [OK]");
+                            df.resolve();
+                        }
+                        settings.error = df.reject;
+                    }
+                    $.ajax(localePath + locale + ".json", settings)
+                    .done(function(data) {
+                        log("loadLocale " + locale + " [OK]");
+                        localeMap[locale] = data;
+                        df.resolve();
+                    }).fail(function() {
+                        log("loadLocale " + locale + " [FAIL]");
+                        df.reject();  
+                    });
                 } else {
+                    log("loadLocale " + locale + " [CACHE]");
+                    df.resolve();
+                }
+                return df;
+            }
                 
-                    if (params) {
-                        $.each(params, function(key) {
-                           result = result.replace("${" + key + "}", params[key]); 
+            return {
+                getText : function(/*String*/ nlsKey, /*Object literal(Optional)*/ params) {
+                    var result = nlsKey;
+                    if (localeMap[currentLocale] && localeMap[currentLocale][nlsKey] !== undefined) {                
+                        result = localeMap[currentLocale][nlsKey];                
+                        if (result !== undefined && ($.isPlainObject(params) || $.isArray(params))) {
+                            $.each(params, function(key, value) {
+                                log("  - param " + key + " : " + value);
+                                result = result.replace("${" + key + "}", value); 
+                            });
+                        }
+                        log("getText " + nlsKey + " -> " + result + " [OK]");
+                    } else if (localeMap[currentLocale] === undefined) {
+                        log("getText loading locale sync...");
+                        var _this = this;
+                        loadLocale(currentLocale, false)
+                        .done(function() {
+                            result = _this.getText(nlsKey, params);
+                            log("getText sync [OK]");
+                        })
+                        .fail(function() {
+                            log("getText sync [FAIL]");
                         });
+                    } else {
+                        log("getText " + nlsKey + " -> " + result + " [FAIL]");                        
+                    }
+                    // Clean ${} marks
+                    result = result.replace(/\${.+}/ig,"");
+                    return result;
+                },
+                getTextPromise : function(/*String*/ nlsKey, /*Object literal(Optional)*/ params) {
+                    var resultDf = $.Deferred();
+                    var _this = this;
+                    loadLocale()
+                        .fail(function() {
+                            log("getTextPromise [FAIL]] -> " + nlsKey);
+                            resultDf.resolve(nlsKey);
+                        })
+                        .done(function() {
+                            var result = _this.getText(nlsKey, params);
+                            log("getTextPromise [OK] -> " + result);
+                            resultDf.resolve(result);
+                        });
+                    return resultDf;
+                },
+                setLocale : function(locale) {
+                    currentLocale = locale;
+                    log("setLocale " + locale + "...");
+                    if (locale != ROOT) {
+                        return $.when(loadLocale(locale), loadLocale(ROOT))
+                            .done(function() {                                   
+                                log("setLocale " + locale + " [OK]");
+                                localeMap[locale] = $.extend({}, localeMap[ROOT], localeMap[locale]);
+                            })
+                            .fail(function() {
+                                log("setLocale " + locale + " [FAIL]");
+                            });            
+                    } else {
+                        return loadLocale();
                     }
                     
-                }
-                
-            } else {
-                console.log("jquery error - Locale " + locale + " not available.");
-                if (!this._loadedLocales['root']) {
-                    this.loadLocale('root');
-                }
-                if (this._loadedLocales["root"]) {
-                    result = this.getText(nlsKey, params, 'root');
-                } else {
-                    console.log("jquery i8n error - please load a root locale.");
+                },
+                getLocale : function() {
+                    return currentLocale;
+                },
+                setPath : function(path) {
+                    localePath = path;
                 }
             }
-            return result || nlsKey;
-        }
-    };
+     })();
      
-    
-    $.fn.i18nParse = function(/*String (optional)*/ locale) {
-        $(this).find("*[data-i18n]").each(function() {
-            $(this).i18nText($(this).attr("data-i18n"), locale);
+     
+     $.fn.i18n = function(locale) {
+        locale = locale || I18n.getLocale();
+        var $this = $(this);
+        I18n.setLocale(locale).done(function() {
+            $this.find("[data-i18n]").each(function() {
+                var $that = $(this),
+                    params = $that.data("i18n-params");
+                log("[data-i18n] -> " + $that.data("i18n") + ", params: " + params);
+                if (params !== undefined && typeof params == "string") {
+                    try {
+                        params = JSON.parse(params);
+                    } catch (e) {
+                        try {
+                            params = JSON.parse(params.replace(/'/ig,'"'));
+                        } catch (e) {
+                        }
+                    }
+                }
+                I18n.getTextPromise($that.data("i18n"), params)
+                .done(function(text) {
+                    log("$.fn.i18n [OK]  -> " + $that.data("i18n") + " " + text);  
+                    $that.html(text);
+                })
+                .fail(function() {
+                    log("$.fn.i18n ha fallado. 2");  
+                });              
+            });
         })
-    };
-    
-    $.fn.i18nText = function(/*String*/ nlsKey, /*String (optional)*/ locale) {
-        if (i18n._ready) {
-            $(this).text(i18n.getText(nlsKey, locale));
-        } else {
-            console.log("jquery i18n error - please init plugin first.");
-        }
-    }
-    
-    $.i18n = i18n;
+        .fail(function() {
+            log("$.fn.i18n ha fallado. 1");  
+        });
+        return $this;    
+     };
      
- })(jQuery);
+     $.i18n = I18n;
+          
+ })(jQuery, true);
